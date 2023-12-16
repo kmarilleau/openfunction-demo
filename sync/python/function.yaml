@@ -1,10 +1,10 @@
-apiVersion: core.openfunction.io/v1beta2
+apiVersion: core.openfunction.io/v1beta1
 kind: Function
 metadata:
   name: python-sample
 spec:
   version: "v1.0.0"
-  image: "registry.kube-system/python-helloworld:v1"
+  image: "$REGISTRY-IP:5000/python-helloworld:v1"
   imageCredentials:
     name: push-secret
   build:
@@ -24,5 +24,5 @@ spec:
         - name: function # DO NOT change this
           imagePullPolicy: IfNotPresent
     triggers:
-      http:
-        port: 80
+      - http:
+          port: 80

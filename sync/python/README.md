@@ -1,12 +1,13 @@
 # Deploying and Testing OpenFunction "Hello World" on Minikube
 
-This README provides instructions for deploying a simple "Hello World" function written in Python on Minikube using OpenFunction, and testing it using kubectl port-forward.
+This README provides instructions for deploying a simple "Hello World" function written in Python on Minikube using OpenFunction, and testing it using kubectl port-forward. It also includes steps for configuring OpenFunction to use an insecure private Docker registry.
 
 ## Prerequisites
 
-- Minikube installed and running
-- kubectl installed and configured
-- OpenFunction installed on your Minikube cluster
+- Minikube installed and running.
+- kubectl installed and configured.
+- OpenFunction installed on your Minikube cluster.
+- Docker installed on your local machine (if building images locally).
 
 ## Step 1: Starting Minikube
 
@@ -16,68 +17,82 @@ Ensure Minikube is running:
 minikube start
 ```
 
-## Step 2: Deploying the Function
+## Step 2: Configuring Insecure Registry Access
 
-1. **Apply the Function Configuration:**
-   Deploy your function by applying the `function.yaml` file to your Minikube cluster.
+OpenFunction requires the IP address of the registry when using an insecure private image repository. Obtain the IP address of the Minikube registry:
 
-   ```bash
-   kubectl apply -f function.yaml
-   ```
+```bash
+minikube addons enable registry
+REGISTRY_IP=$(kubectl get svc registry -n kube-system -o jsonpath='{.spec.clusterIP}')
+```
 
-2. **Check the Function Deployment:**
-   Verify that your function has been deployed successfully.
+Next, configure your OpenFunction to use the Minikube registry. When defining the image to be used by OpenFunction, specify the IP address:
 
-   ```bash
-   kubectl get functions
-   ```
+```yaml
+apiVersion: openfunction.io/v1beta1
+kind: Function
+metadata:
+  name: hello-world-function
+spec:
+  image: "$REGISTRY_IP:5000/hello-world-function:latest"
+  build:
+    builder: "openfunction/builder-go:v1"
+    params:
+      registry: "$REGISTRY_IP:5000"
+      registryCredential: "push-secret"
+```
 
-## Step 3: Setting Up Port Forwarding
+Note: Replace `$REGISTRY_IP` with the actual IP address of your registry.
 
-To test your function locally, you need to set up port forwarding from Minikube to your local machine.
+## Step 3: Creating a Secret for the Registry
 
-1. **Find the Pod Name:**
-   Get the name of the pod running your function.
+If your registry requires authentication, create a secret with your Docker credentials:
 
-   ```bash
-   kubectl get pods
-   ```
+```bash
+kubectl create secret docker-registry push-secret \
+  --docker-server=http://$REGISTRY_IP:5000 \
+  --docker-username=<your_registry_user> \
+  --docker-password=<your_registry_password>
+```
 
-2. **Port Forwarding:**
-   Forward a local port to the port your function is running on in the pod. Assume your function is running on port 8080.
+Replace `<your_registry_user>` and `<your_registry_password>` with your actual registry username and password.
 
-   ```bash
-   kubectl port-forward pod/<pod-name> 8080:8080
-   ```
+## Step 4: Deploying the Function
 
-   Replace `<pod-name>` with the name of your pod.
+Apply the Function Configuration:
 
-## Step 4: Testing the Function
+```bash
+kubectl apply -f function.yaml
+```
 
-With port forwarding set up, you can now test your function:
+Check the Function Deployment:
 
-1. **Send a Request to the Function:**
-   Use a tool like `curl` to send a request to your function.
+```bash
+kubectl get functions
+```
 
-   ```bash
-   curl http://localhost:8080
-   ```
+## Step 5: Setting Up Port Forwarding
 
-2. **Check the Response:**
-   You should receive a "Hello World" response from your function.
+To test your function locally, set up port forwarding from Minikube to your local machine:
+
+```bash
+kubectl port-forward svc/hello-world-function 8080:8080
+```
+
+## Step 6: Testing the Function
+
+With port forwarding set up, you can now test your function by sending a request:
+
+```bash
+curl http://localhost:8080
+```
+
+You should receive a "Hello World" response from your function.
 
 ## Troubleshooting
 
-If you encounter any issues, check the following:
-
-- Ensure Minikube is running and all services are in the correct state.
-- Verify that the pod name used in the port forwarding command is correct.
-- Check the logs of the function pod for any errors:
-
-  ```bash
-  kubectl logs <pod-name>
-  ```
+If you encounter any issues, ensure Minikube is running and all services are in the correct state, the registry IP is correct, and you have the correct credentials for the registry.
 
 ## Conclusion
 
-You have successfully deployed and tested a "Hello World" Python function on Minikube using OpenFunction. This setup provides a basic example of how to work with serverless functions in a local Kubernetes environment.
+You have successfully deployed and tested a "Hello World" Python function on Minikube using OpenFunction and configured it to use an insecure private Docker registry.
