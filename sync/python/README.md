@@ -15,8 +15,10 @@ This README provides instructions for deploying a simple "Hello World" function 
 
 1. **Apply the Function Configuration:**
 
+  **Note**: Replace `<docker-username>` with your Docker Hub username in the `function.yaml` file before applying it.
+
    ```bash
-   kubectl apply -f function.yaml
+   kubectl apply -f function.yaml --namespace openfunction
    ```
 
 2. **Check the Function Deployment:**
@@ -30,7 +32,7 @@ This README provides instructions for deploying a simple "Hello World" function 
 To test your function locally, set up port forwarding from Minikube to your local machine:
 
 ```bash
-kubectl port-forward svc/hello-world-function 8080:8080
+kubectl port-forward svc/hello-world-function 80:8080
 ```
 
 ## Testing the Function

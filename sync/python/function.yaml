@@ -4,15 +4,16 @@ metadata:
   name: python-helloworld
 spec:
   version: "v1.0.0"
-  image: "$REGISTRY-IP:5000/python-helloworld:v1"
+  image: "<docker-username>/python-helloworld:v1" # Replace `<docker-username>` with your Docker Hub username.
   imageCredentials:
     name: dockerhub-credentials
   build:
-    builder: "openfunction/gcp-builder:v1"
+    builder: "gcr.io/buildpacks/builder"
     env:
       GOOGLE_FUNCTION_TARGET: "hello_world"
       GOOGLE_FUNCTION_SIGNATURE_TYPE: "http"
       GOOGLE_FUNCTION_SOURCE: "main.py"
+      GOOGLE_PYTHON_VERSION: 3.12.1
     srcRepo:
       url: "https://github.com/kmarilleau/openfunction-demo.git"
       sourceSubPath: "sync/python"
