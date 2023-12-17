@@ -4,74 +4,28 @@ This README provides instructions for deploying a simple "Hello World" function 
 
 ## Prerequisites
 
+**For a detailed guide on installing these prerequisites, visit [OpenFunction Demo Prerequisites](https://github.com/kmarilleau/openfunction-demo/blob/main/README.md).**
+
 - Minikube installed and running.
 - kubectl installed and configured.
 - OpenFunction installed on your Minikube cluster.
 - Docker installed on your local machine (if building images locally).
 
-## Step 1: Starting Minikube
+## Deploying the Function
 
-Ensure Minikube is running:
+1. **Apply the Function Configuration:**
 
-```bash
-minikube start
-```
+   ```bash
+   kubectl apply -f function.yaml
+   ```
 
-## Step 2: Configuring Insecure Registry Access
+2. **Check the Function Deployment:**
 
-OpenFunction requires the IP address of the registry when using an insecure private image repository. Obtain the IP address of the Minikube registry:
+   ```bash
+   kubectl get functions
+   ```
 
-```bash
-minikube addons enable registry
-REGISTRY_IP=$(kubectl get svc registry -n kube-system -o jsonpath='{.spec.clusterIP}')
-```
-
-Next, configure your OpenFunction to use the Minikube registry. When defining the image to be used by OpenFunction, specify the IP address:
-
-```yaml
-apiVersion: openfunction.io/v1beta1
-kind: Function
-metadata:
-  name: hello-world-function
-spec:
-  image: "$REGISTRY_IP:5000/hello-world-function:latest"
-  build:
-    builder: "openfunction/builder-go:v1"
-    params:
-      registry: "$REGISTRY_IP:5000"
-      registryCredential: "push-secret"
-```
-
-Note: Replace `$REGISTRY_IP` with the actual IP address of your registry.
-
-## Step 3: Creating a Secret for the Registry
-
-If your registry requires authentication, create a secret with your Docker credentials:
-
-```bash
-kubectl create secret docker-registry push-secret \
-  --docker-server=http://$REGISTRY_IP:5000 \
-  --docker-username=<your_registry_user> \
-  --docker-password=<your_registry_password>
-```
-
-Replace `<your_registry_user>` and `<your_registry_password>` with your actual registry username and password.
-
-## Step 4: Deploying the Function
-
-Apply the Function Configuration:
-
-```bash
-kubectl apply -f function.yaml
-```
-
-Check the Function Deployment:
-
-```bash
-kubectl get functions
-```
-
-## Step 5: Setting Up Port Forwarding
+## Setting Up Port Forwarding
 
 To test your function locally, set up port forwarding from Minikube to your local machine:
 
@@ -79,7 +33,7 @@ To test your function locally, set up port forwarding from Minikube to your loca
 kubectl port-forward svc/hello-world-function 8080:8080
 ```
 
-## Step 6: Testing the Function
+## Testing the Function
 
 With port forwarding set up, you can now test your function by sending a request:
 
