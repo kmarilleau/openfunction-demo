@@ -6,7 +6,7 @@ spec:
   version: "v1.0.0"
   image: "$REGISTRY-IP:5000/python-helloworld:v1"
   imageCredentials:
-    name: push-secret
+    name: dockerhub-credentials
   build:
     builder: "openfunction/gcp-builder:v1"
     env:
@@ -18,10 +18,10 @@ spec:
       sourceSubPath: "sync/python"
       revision: "main"
   serving:
-    runtime: knative # default to knative
+    runtime: knative
     template:
       containers:
-        - name: function # DO NOT change this
+        - name: function
           imagePullPolicy: IfNotPresent
     triggers:
       - http:
